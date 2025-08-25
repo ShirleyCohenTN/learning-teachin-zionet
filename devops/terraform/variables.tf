@@ -193,6 +193,7 @@ variable "frontend_appinsights_sampling_percentage" {
   type        = number
   default     = 100
 }
+
 #------------- Redis Variables -------------
 variable "redis_name" {
   description = "Name of the Redis cache instance"

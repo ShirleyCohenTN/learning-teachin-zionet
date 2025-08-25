@@ -1,15 +1,17 @@
-# DEV overrides for the Helm chart
+# Template values file for temporary environments (test*, feat*, pr*, etc.)
+# Based on values.dev.yaml but with frontend disabled to prevent DNS conflicts
+
 global:
   dockerRegistry: ""   # CI sets: docker.io/<org> or <acr>.azurecr.io
   imagePullPolicy: IfNotPresent
-  environment: ""      # Will be set by CI/CD to TARGET_NAMESPACE (e.g., "devacr2")
+  environment: ""      # Will be set by CI/CD to TARGET_NAMESPACE (e.g., "featest", "test123")
   dapr:
     enabled: true
     configName: dapr-config
 
 namespace:
   create: true
-  name: dev
+  name: ""  # Will be set dynamically to TARGET_NAMESPACE
 
 manager:
   image:
@@ -50,10 +52,10 @@ accessor:
   env:
     ASPNETCORE_URLS: "http://+:5003"
 
-# Frontend Static Web App Proxy
+# Frontend Static Web App Proxy - DISABLED for temporary environments
 frontend:
   name: frontend-proxy
-  enabled: true
+  enabled: false  # Disabled to prevent DNS conflicts with dev/prod environments
   path: "/"
   staticWebApp:
-    hostname: ""  # Will be set dynamically by deployment pipeline from Terraform output
+    hostname: ""  # Only used when enabled=true

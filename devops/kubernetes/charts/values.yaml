@@ -44,6 +44,14 @@ manager:
     Jwt__Issuer: ""
     Jwt__Audience: ""
     Jwt__RefreshTokenHashKey: ""
+  ingress:
+    enabled: true
+    host: teachin.westeurope.cloudapp.azure.com
+    basePath: /api
+    tls:
+      enabled: true
+      clusterIssuer: letsencrypt-prod
+      secretName: teachin-tls
   secrets:
     serviceBus:
       name: azure-service-bus-secret
@@ -165,3 +173,11 @@ dapr:
         poolTimeout: "30s"
         idleTimeout: "300s"
         maxConnAge: "30m"
+
+
+# Frontend Static Web App Proxy Configuration
+frontend:
+  enabled: false  # Enable in environment-specific values
+  path: "/"
+  staticWebApp:
+    hostname: ""  # Set in environment-specific values

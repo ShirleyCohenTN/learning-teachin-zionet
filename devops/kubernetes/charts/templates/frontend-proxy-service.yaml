@@ -1,0 +1,20 @@
+{{- if .Values.frontend.enabled }}
+{{- $staticWebAppHostname := .Values.frontend.staticWebApp.hostname }}
+{{- if not $staticWebAppHostname }}
+  {{- fail "frontend.staticWebApp.hostname must be provided when frontend.enabled=true" }}
+{{- end }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.frontend.name }}
+  namespace: {{ include "app.namespace" . }}
+  labels:
+    app: {{ .Values.frontend.name }}
+    environment: {{ .Values.global.environment }}
+spec:
+  type: ExternalName
+  externalName: {{ $staticWebAppHostname }}
+  ports:
+  - port: 443
+    protocol: TCP
+{{- end }}

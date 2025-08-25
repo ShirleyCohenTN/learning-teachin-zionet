@@ -111,7 +111,55 @@ public class AccessorService : IAccessorService
             }
         }
     }
+    public async Task<StatsSnapshot> ComputeStatsAsync(CancellationToken ct = default)
+    {
+        // Use a server-side timeout; don't tie to the HTTP request abort
+        using var serverTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(120));
+        var token = serverTimeout.Token;
 
+        var nowUtc = DateTimeOffset.UtcNow;
+        var from15m = nowUtc.AddMinutes(-15);
+        var from5m = nowUtc.AddMinutes(-5);
+
+        var totalThreads = await _dbContext.ChatThreads.LongCountAsync(token);
+
+        var totalUniqueUsersByThread = await _dbContext.ChatThreads
+            .Select(t => t.UserId)
+            .Distinct()
+            .LongCountAsync(token);
+
+        var totalMessages = await _dbContext.ChatMessages.LongCountAsync(token);
+
+        var totalUniqueUsersByMessage = await _dbContext.ChatMessages
+            .Select(m => m.UserId)
+            .Distinct()
+            .LongCountAsync(token);
+
+        var activeUsersLast15m = await _dbContext.ChatMessages
+            .Where(m => m.Timestamp >= from15m)
+            .Select(m => m.UserId)
+            .Distinct()
+            .LongCountAsync(token);
+
+        var messagesLast5m = await _dbContext.ChatMessages
+            .Where(m => m.Timestamp >= from5m)
+            .LongCountAsync(token);
+
+        var messagesLast15m = await _dbContext.ChatMessages
+            .Where(m => m.Timestamp >= from15m)
+            .LongCountAsync(token);
+
+        return new StatsSnapshot(
+            TotalThreads: totalThreads,
+            TotalUniqueUsersByThread: totalUniqueUsersByThread,
+            TotalMessages: totalMessages,
+            TotalUniqueUsersByMessage: totalUniqueUsersByMessage,
+            ActiveUsersLast15m: activeUsersLast15m,
+            MessagesLast5m: messagesLast5m,
+            MessagesLast15m: messagesLast15m,
+            GeneratedAtUtc: nowUtc
+        );
+    }
     public async Task CreateTaskAsync(TaskModel task)
     {
         using var scope = _logger.BeginScope("TaskId: {TaskId}", task.Id);

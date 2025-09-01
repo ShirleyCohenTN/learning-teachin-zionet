@@ -70,7 +70,7 @@ public class EngineQueueHandlerTests
         };
 
         // Act
-        await sut.HandleAsync(msg, renewLock: () => Task.CompletedTask, CancellationToken.None);
+        await sut.HandleAsync(msg, null, renewLock: () => Task.CompletedTask, CancellationToken.None);
 
         // Assert
         engine.Verify(e => e.ProcessTaskAsync(task, It.IsAny<CancellationToken>()), Times.Once);
@@ -91,7 +91,7 @@ public class EngineQueueHandlerTests
             Payload = JsonSerializer.Deserialize<JsonElement>("null")
         };
 
-        var act = () => sut.HandleAsync(msg, () => Task.CompletedTask, CancellationToken.None);
+        var act = () => sut.HandleAsync(msg, null, () => Task.CompletedTask, CancellationToken.None);
 
         await act.Should().ThrowAsync<NonRetryableException>()
                  .WithMessage("*Payload deserialization returned null*");
@@ -226,7 +226,7 @@ public class EngineQueueHandlerTests
         };
 
         // Act
-        await sut.HandleAsync(msg, () => Task.CompletedTask, CancellationToken.None);
+        await sut.HandleAsync(msg, null, () => Task.CompletedTask, CancellationToken.None);
 
         // Assert
         accessorClient.Verify(a => a.GetHistorySnapshotAsync(threadId, userId, It.IsAny<CancellationToken>()), Times.Once);
@@ -265,7 +265,7 @@ public class EngineQueueHandlerTests
             Payload = ToJsonElement(req)
         };
 
-        var act = () => sut.HandleAsync(msg, () => Task.CompletedTask, CancellationToken.None);
+        var act = () => sut.HandleAsync(msg, null, () => Task.CompletedTask, CancellationToken.None);
 
         await act.Should().ThrowAsync<RetryableException>()
           .WithMessage("*Transient error while processing AI question*");
@@ -337,7 +337,7 @@ public class EngineQueueHandlerTests
             Metadata = JsonSerializer.SerializeToElement(new { UserId = userId })
         };
 
-        var act = () => sut.HandleAsync(msg, () => Task.CompletedTask, CancellationToken.None);
+        var act = () => sut.HandleAsync(msg, null, () => Task.CompletedTask, CancellationToken.None);
         var ex = (await act.Should().ThrowAsync<RetryableException>()
                            .WithMessage("*Transient error while processing AI chat*"))
                  .Which;
@@ -362,7 +362,7 @@ public class EngineQueueHandlerTests
             Payload = JsonSerializer.Deserialize<JsonElement>("{}")
         };
 
-        var act = () => sut.HandleAsync(msg, () => Task.CompletedTask, CancellationToken.None);
+        var act = () => sut.HandleAsync(msg, null, () => Task.CompletedTask, CancellationToken.None);
 
         await act.Should().ThrowAsync<NonRetryableException>()
                  .WithMessage("*No handler for action 9999*");

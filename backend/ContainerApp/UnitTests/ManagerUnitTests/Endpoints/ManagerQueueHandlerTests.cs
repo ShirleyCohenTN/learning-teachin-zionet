@@ -120,7 +120,7 @@ public class ManagerQueueHandlerTests
           .Returns(Task.CompletedTask)
           .Verifiable();
 
-        await handler.HandleAsync(okMsg, () => Task.CompletedTask, CancellationToken.None);
+        await handler.HandleAsync(okMsg, null, () => Task.CompletedTask, CancellationToken.None);
 
         ai.Verify(a => a.SaveAnswerAsync(It.IsAny<AiResponseModel>(), It.IsAny<CancellationToken>()), Times.Once);
         ai.VerifyNoOtherCalls();
@@ -133,6 +133,6 @@ public class ManagerQueueHandlerTests
         };
 
         await Assert.ThrowsAsync<NonRetryableException>(() =>
-            handler.HandleAsync(unknownMsg, () => Task.CompletedTask, CancellationToken.None));
+            handler.HandleAsync(unknownMsg, null, () => Task.CompletedTask, CancellationToken.None));
     }
 }

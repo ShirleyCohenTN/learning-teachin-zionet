@@ -14,12 +14,12 @@ public class ManagerCallbackQueueService : IManagerCallbackQueueService
         _logger = logger;
     }
 
-    public async Task PublishToManagerCallbackAsync<T>(T message, CancellationToken ct = default)
+    public async Task PublishToManagerCallbackAsync<T>(T message, Dictionary<string, string> metadata, CancellationToken ct = default)
     {
         try
         {
             _logger.LogDebug("Publishing message to {QueueName}", QueueNames.ManagerCallbackQueue);
-            await _dapr.InvokeBindingAsync($"{QueueNames.ManagerCallbackQueue}-out", "create", message, cancellationToken: ct);
+            await _dapr.InvokeBindingAsync($"{QueueNames.ManagerCallbackQueue}-out", "create", message, metadata: metadata, cancellationToken: ct);
             _logger.LogInformation("Message published to {QueueName}", QueueNames.ManagerCallbackQueue);
         }
         catch (Exception ex)

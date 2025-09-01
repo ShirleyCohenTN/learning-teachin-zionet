@@ -35,7 +35,12 @@ public class EngineClient : IEngineClient
                 ActionName = MessageAction.TestLongTask,
                 Payload = payload
             };
-            await _daprClient.InvokeBindingAsync($"{QueueNames.EngineQueue}-out", "create", message);
+            var queueMetadata = new Dictionary<string, string>
+            {
+                ["SessionId"] = Guid.NewGuid().ToString("N")
+            };
+
+            await _daprClient.InvokeBindingAsync($"{QueueNames.EngineQueue}-out", "create", message, metadata: queueMetadata);
 
             _logger.LogDebug(
                 "Task {TaskId} sent to Engine via binding '{Binding}'",
@@ -70,10 +75,10 @@ public class EngineClient : IEngineClient
 
             var queueMetadata = new Dictionary<string, string>
             {
-                ["sessionId"] = request.ThreadId.ToString()
+                ["SessionId"] = request.ThreadId.ToString()
             };
 
-            await _daprClient.InvokeBindingAsync($"{QueueNames.EngineQueue}-out", "create", message, queueMetadata);
+            await _daprClient.InvokeBindingAsync($"{QueueNames.EngineQueue}-out", "create", message, metadata: queueMetadata);
 
             _logger.LogDebug(
                 "ProcessingChatMessage request for thread {ThreadId} sent to Engine via binding '{Binding}'",

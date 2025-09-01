@@ -34,9 +34,14 @@ public sealed class AiGatewayService : IAiGatewayService
             Payload = JsonSerializer.SerializeToElement(msg)
         };
 
+        var queueMetadata = new Dictionary<string, string>
+        {
+            ["SessionId"] = Guid.NewGuid().ToString("N")
+        };
+
         try
         {
-            await _dapr.InvokeBindingAsync($"{QueueNames.EngineQueue}-out", "create", message, cancellationToken: ct);
+            await _dapr.InvokeBindingAsync($"{QueueNames.EngineQueue}-out", "create", message, metadata: queueMetadata, cancellationToken: ct);
 
             return msg.Id;
         }

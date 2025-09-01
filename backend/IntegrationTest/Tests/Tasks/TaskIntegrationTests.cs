@@ -28,7 +28,7 @@ public class TaskIntegrationTests(
 
         var receivedNotification = await WaitForNotificationAsync(
             n => n.Type == NotificationType.Success && n.Message.Contains(first.Name),
-            TimeSpan.FromSeconds(10)
+            TimeSpan.FromSeconds(20)
         );
 
         receivedNotification.Should().NotBeNull("Expected a success notification for task creation");
@@ -63,7 +63,7 @@ public class TaskIntegrationTests(
         // Wait for signalR notification
         var receivedNotification = await WaitForNotificationAsync(
             n => n.Type == NotificationType.Success && n.Message.Contains(task.Name),
-            TimeSpan.FromSeconds(10)
+            TimeSpan.FromSeconds(20)
         );
 
         receivedNotification

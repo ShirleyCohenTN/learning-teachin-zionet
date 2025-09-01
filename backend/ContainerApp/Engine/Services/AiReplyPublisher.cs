@@ -50,7 +50,7 @@ public sealed class AiReplyPublisher : IAiReplyPublisher
 
             var queueMetadata = new Dictionary<string, string>
             {
-                ["sessionId"] = response.ThreadId.ToString()
+                ["SessionId"] = response.ThreadId.ToString()
             };
 
             _log.LogInformation("Publishing AI answer to callback binding {Binding}", CallbackBindingName);

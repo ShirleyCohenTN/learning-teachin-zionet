@@ -141,8 +141,12 @@ public class AccessorQueueHandler : IQueueHandler<Message>
                 Payload = JsonSerializer.SerializeToElement(notification),
                 Metadata = message.Metadata
             };
+            var queueMetadata = new Dictionary<string, string>
+            {
+                ["SessionId"] = metadata.MessageId ?? Guid.NewGuid().ToString("N")
+            };
 
-            await _managerCallbackQueueService.PublishToManagerCallbackAsync(messageToManger, cancellationToken);
+            await _managerCallbackQueueService.PublishToManagerCallbackAsync(messageToManger, metadata: queueMetadata, cancellationToken);
 
             _logger.LogInformation("Task {Id} created", taskModel.Id);
         }

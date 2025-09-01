@@ -143,7 +143,7 @@ public class AccessorQueueHandler : IQueueHandler<Message>
             };
             var queueMetadata = new Dictionary<string, string>
             {
-                ["SessionId"] = metadata.MessageId ?? Guid.NewGuid().ToString("N")
+                ["SessionId"] = Guid.NewGuid().ToString("N")
             };
 
             await _managerCallbackQueueService.PublishToManagerCallbackAsync(messageToManger, metadata: queueMetadata, cancellationToken);

@@ -28,7 +28,7 @@ public class TaskIntegrationTests(
 
         var receivedNotification = await WaitForNotificationAsync(
             n => n.Type == NotificationType.Success && n.Message.Contains(first.Name),
-            TimeSpan.FromSeconds(20)
+            TimeSpan.FromSeconds(10)
         );
 
         receivedNotification.Should().NotBeNull("Expected a success notification for task creation");

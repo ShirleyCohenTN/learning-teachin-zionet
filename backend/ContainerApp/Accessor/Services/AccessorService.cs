@@ -522,4 +522,128 @@ public class AccessorService : IAccessorService
             throw;
         }
     }
+    public async Task<IEnumerable<UserData>> GetAllUsersAsync(Role? roleFilter = null, Guid? teacherId = null, CancellationToken ct = default)
+    {
+        _logger.LogInformation("GetAllUsers(roleFilter={Role}, teacherId={Teacher})",
+            roleFilter?.ToString() ?? "none", teacherId?.ToString() ?? "none");
+
+        var query = _dbContext.Users.AsNoTracking();
+
+        if (roleFilter.HasValue)
+        {
+            query = query.Where(u => u.Role == roleFilter.Value);
+        }
+
+        var users = await query
+            .Select(u => new UserData
+            {
+                UserId = u.UserId,
+                Email = u.Email,
+                FirstName = u.FirstName,
+                LastName = u.LastName,
+                Role = u.Role
+            })
+            .ToListAsync(ct);
+
+        return users;
+    }
+
+    public async Task<IEnumerable<UserData>> GetStudentsForTeacherAsync(Guid teacherId, CancellationToken ct = default)
+    {
+        _logger.LogInformation("GetStudentsForTeacher(teacherId={TeacherId})", teacherId);
+
+        var studentIds = await _dbContext.TeacherStudents
+            .AsNoTracking()
+            .Where(ts => ts.TeacherId == teacherId)
+            .Select(ts => ts.StudentId)
+            .ToListAsync(ct);
+
+        if (studentIds.Count == 0)
+        {
+            return Enumerable.Empty<UserData>();
+        }
+
+        var students = await _dbContext.Users
+            .AsNoTracking()
+            .Where(u => studentIds.Contains(u.UserId) && u.Role == Role.Student)
+            .Select(u => new UserData
+            {
+                UserId = u.UserId,
+                Email = u.Email,
+                FirstName = u.FirstName,
+                LastName = u.LastName,
+                Role = u.Role
+            })
+            .ToListAsync(ct);
+
+        return students;
+    }
+    public async Task<bool> AssignStudentToTeacherAsync(Guid teacherId, Guid studentId, CancellationToken ct = default)
+    {
+        // Validate roles
+        var teacherOk = await _dbContext.Users.AnyAsync(u => u.UserId == teacherId && u.Role == Role.Teacher, ct);
+        var studentOk = await _dbContext.Users.AnyAsync(u => u.UserId == studentId && u.Role == Role.Student, ct);
+
+        if (!teacherOk || !studentOk)
+        {
+            return false;
+        }
+
+        var exists = await _dbContext.TeacherStudents
+            .AnyAsync(ts => ts.TeacherId == teacherId && ts.StudentId == studentId, ct);
+
+        if (exists)
+        {
+            return true;
+        }
+
+        _dbContext.TeacherStudents.Add(new TeacherStudent { TeacherId = teacherId, StudentId = studentId });
+        await _dbContext.SaveChangesAsync(ct);
+        return true;
+    }
+
+    public async Task<bool> UnassignStudentFromTeacherAsync(Guid teacherId, Guid studentId, CancellationToken ct = default)
+    {
+        var rel = await _dbContext.TeacherStudents
+            .Where(ts => ts.TeacherId == teacherId && ts.StudentId == studentId)
+            .FirstOrDefaultAsync(ct);
+
+        if (rel == null)
+        {
+            return true;
+        }
+
+        _dbContext.TeacherStudents.Remove(rel);
+        await _dbContext.SaveChangesAsync(ct);
+        return true;
+    }
+
+    public async Task<IEnumerable<UserData>> GetTeachersForStudentAsync(Guid studentId, CancellationToken ct = default)
+    {
+        var teacherIds = await _dbContext.TeacherStudents
+            .AsNoTracking()
+            .Where(ts => ts.StudentId == studentId)
+            .Select(ts => ts.TeacherId)
+            .ToListAsync(ct);
+
+        if (teacherIds.Count == 0)
+        {
+            return Enumerable.Empty<UserData>();
+        }
+
+        var teachers = await _dbContext.Users
+            .AsNoTracking()
+            .Where(u => teacherIds.Contains(u.UserId) && u.Role == Role.Teacher)
+            .Select(u => new UserData
+            {
+                UserId = u.UserId,
+                Email = u.Email,
+                FirstName = u.FirstName,
+                LastName = u.LastName,
+                Role = u.Role
+            })
+            .ToListAsync(ct);
+
+        return teachers;
+    }
 }
